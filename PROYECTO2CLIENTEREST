@@ -1,0 +1,64 @@
+// --- PROYECTO 2: Cliente REST ---
+// sIGUIENDO LAS INSTRUCCIONES: Crea un proyecto el cul consuma el servicio REST del proyecto 1 el cual va a obtener todos los productos de un proveedor uno por id del proveedor y otro por rfc del proveedor
+// Teniendo un JSON de salida con la estructura: StatusCode: 200(o 400,500 Según el caso),
+// products:{
+// Nombre: “”,
+// Codigo:””
+// Detalle: “”,
+// Precio: 0,
+// Nombre_Proveedor: “”
+
+// Servicio cliente para consumir la API
+@Service
+public class ProductoClientService {
+    private final RestTemplate restTemplate;
+
+    @Value("${api.base-url}")
+    private String baseUrl;
+
+    public ProductoClientService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    public List<Producto> obtenerProductosPorProveedorId(Long idProveedor) {
+        String url = String.format("%s/api/productos/proveedor/%d", baseUrl, idProveedor);
+        ResponseEntity<List<Producto>> response = restTemplate.exchange(
+            url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Producto>>() {});
+        return response.getBody();
+    }
+
+    public List<Producto> obtenerProductosPorRFC(String rfc) {
+        String url = String.format("%s/api/productos/rfc/%s", baseUrl, rfc);
+        ResponseEntity<List<Producto>> response = restTemplate.exchange(
+            url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Producto>>() {});
+        return response.getBody();
+    }
+}
+
+// Controlador para exponer los resultados
+@RestController
+@RequestMapping("/api/consumo")
+public class ConsumoController {
+    @Autowired
+    private ProductoClientService productoClientService;
+
+    @GetMapping("/productos/proveedor/{idProveedor}")
+    public ResponseEntity<Map<String, Object>> obtenerProductosPorProveedorId(@PathVariable Long idProveedor) {
+        try {
+            List<Producto> productos = productoClientService.obtenerProductosPorProveedorId(idProveedor);
+            return ResponseEntity.ok(Map.of("statusCode", 200, "products", productos));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("statusCode", 500, "message", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/productos/proveedor/rfc/{rfc}")
+    public ResponseEntity<Map<String, Object>> obtenerProductosPorRFC(@PathVariable String rfc) {
+        try {
+            List<Producto> productos = productoClientService.obtenerProductosPorRFC(rfc);
+            return ResponseEntity.ok(Map.of("statusCode", 200, "products", productos));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("statusCode", 500, "message", e.getMessage()));
+        }
+    }
+}
