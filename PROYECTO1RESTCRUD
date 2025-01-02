@@ -1,0 +1,127 @@
+// --- PROYECTO 1: CRUD REST API ---
+// Siguiendo las instrucciones del proyecto 1: Crear un proyecto REST el cual realize un CRUD el cual pueda consumir stored procedures para insertar y modificar
+// y con un query normal para la consulta para la afectación de las tablas que se mencionaron anteriormente.
+
+// propiedades de la aplicacion
+spring.datasource.url=jdbc:postgresql://localhost:5432/comercio
+spring.datasource.username=AXM_97   # O usuario que se desee
+spring.datasource.password=1234     # Contraseña del usuario
+spring.jpa.hibernate.ddl-auto=none      # Para no cambiar el esquema automáticamente
+spring.jpa.show-sql=true                # Para mostrar las consultas SQL en la consola
+
+
+
+
+// Creacion de entidad Proveedor
+@Entity
+@Table(schema = "comercio", name = "proveedor")
+public class Proveedor {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String nombre;
+    private String detalle;
+    private String rfc;
+    private String telefono;
+
+    // Getters y setters
+}
+
+// Creacion entidad Producto
+@Entity
+@Table(schema = "comercio", name = "producto")
+public class Producto {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String nombre;
+    private String detalle;
+    private String codigo;
+    private BigDecimal precio;
+
+    @ManyToOne
+    @JoinColumn(name = "proveedor_id", nullable = false)
+    private Proveedor proveedor;
+
+    // Getters y setters
+}
+
+// Repositorios
+@Repository
+public interface ProveedorRepository extends JpaRepository<Proveedor, Long> {}
+
+@Repository
+public interface ProductoRepository extends JpaRepository<Producto, Long> {
+    List<Producto> findByProveedorId(Long proveedorId);
+}
+
+// Servicio Producto
+@Service
+public class ProductoService {
+    @Autowired
+    private ProductoRepository productoRepository;
+
+    public Producto crear(Producto producto) {
+        return productoRepository.save(producto);
+    }
+
+    public Producto actualizar(Long id, Producto producto) {
+        Producto existente = productoRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+        existente.setNombre(producto.getNombre());
+        existente.setDetalle(producto.getDetalle());
+        existente.setCodigo(producto.getCodigo());
+        existente.setPrecio(producto.getPrecio());
+        existente.setProveedor(producto.getProveedor());
+        return productoRepository.save(existente);
+    }
+
+    public Producto obtenerPorId(Long id) {
+        return productoRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+    }
+
+    public void eliminar(Long id) {
+        productoRepository.deleteById(id);
+    }
+
+    public List<Producto> obtenerPorProveedor(Long proveedorId) {
+        return productoRepository.findByProveedorId(proveedorId);
+    }
+}
+
+// Controlador Producto
+@RestController
+@RequestMapping("/api/productos")
+public class ProductoController {
+    @Autowired
+    private ProductoService productoService;
+
+    @PostMapping
+    public ResponseEntity<Producto> crearProducto(@RequestBody Producto producto) {
+        return ResponseEntity.ok(productoService.crear(producto));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Producto> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(productoService.obtenerPorId(id));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Producto> actualizarProducto(@PathVariable Long id, @RequestBody Producto producto) {
+        return ResponseEntity.ok(productoService.actualizar(id, producto));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id) {
+        productoService.eliminar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/proveedor/{idProveedor}")
+    public ResponseEntity<List<Producto>> obtenerPorProveedor(@PathVariable Long idProveedor) {
+        return ResponseEntity.ok(productoService.obtenerPorProveedor(idProveedor));
+    }
+}
