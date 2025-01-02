@@ -1,4 +1,5 @@
 // --- PROYECTO 2: Cliente REST ---
+// Por Alexis Islas 30/12/24
 // sIGUIENDO LAS INSTRUCCIONES: Crea un proyecto el cul consuma el servicio REST del proyecto 1 el cual va a obtener todos los productos de un proveedor uno por id del proveedor y otro por rfc del proveedor
 // Teniendo un JSON de salida con la estructura: StatusCode: 200(o 400,500 Según el caso),
 // products:{
