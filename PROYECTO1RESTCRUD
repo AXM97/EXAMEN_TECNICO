@@ -1,4 +1,5 @@
 // --- PROYECTO 1: CRUD REST API ---
+// Por Alexis Islas 30/12/24
 // Siguiendo las instrucciones del proyecto 1: Crear un proyecto REST el cual realize un CRUD el cual pueda consumir stored procedures para insertar y modificar
 // y con un query normal para la consulta para la afectación de las tablas que se mencionaron anteriormente.
 
